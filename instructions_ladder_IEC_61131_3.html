@@ -1,0 +1,218 @@
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Node Registration
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="text/javascript">
+
+    var LADDER_META = {
+        NO:   { srcA: true,  srcB: false, dest: false, category: 'Contact'    },
+        NC:   { srcA: true,  srcB: false, dest: false, category: 'Contact'    },
+        EQ:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        NEQ:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        GT:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        GE:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        LT:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        LE:   { srcA: true,  srcB: true,  dest: false, category: 'Compare'    },
+        ADD:   { srcA: true,  srcB: true,  dest: true,  category: 'Math'       },
+        SUB:   { srcA: true,  srcB: true,  dest: true,  category: 'Math'       },
+        MUL:   { srcA: true,  srcB: true,  dest: true,  category: 'Math'       },
+        DIV:   { srcA: true,  srcB: true,  dest: true,  category: 'Math'       },
+        MOD:   { srcA: true,  srcB: true,  dest: true,  category: 'Math'       },
+        MOV:   { srcA: true,  srcB: false, dest: true,  category: 'Math'       },
+        ABS:   { srcA: true,  srcB: false, dest: true,  category: 'Math'       },
+        SQR:   { srcA: true,  srcB: false, dest: true,  category: 'Math'       },
+        SET:   { srcA: false, srcB: false, dest: true,  category: 'Coil'       },
+        RESET: { srcA: false, srcB: false, dest: true,  category: 'Coil'       }
+    };
+
+    RED.nodes.registerType('instructions-ladder-IEC-61131-3', {
+        category:  'function',
+        color:     '#C0392B',
+        defaults: {
+            name:       { value: '' },
+            ladderFunc: { value: 'NO' },
+            srcA:       { value: 'payload', validate: function(v) {
+                var meta = LADDER_META[$('#node-input-ladderFunc').val()] || {};
+                return !meta.srcA || (v !== undefined && v !== '');
+            }},
+            srcAType:   { value: 'msg' },
+            srcB:       { value: 'payload', validate: function(v) {
+                var meta = LADDER_META[$('#node-input-ladderFunc').val()] || {};
+                return !meta.srcB || (v !== undefined && v !== '');
+            }},
+            srcBType:   { value: 'msg' },
+            dest:       { value: 'payload', validate: function(v) {
+                var meta = LADDER_META[$('#node-input-ladderFunc').val()] || {};
+                return !meta.dest || (v !== undefined && v !== '');
+            }},
+            destType:   { value: 'msg' }
+        },
+        inputs:  1,
+        outputs: 1,
+        icon:    'ladder.svg',
+        paletteLabel: 'ladder iec',
+
+        label: function () {
+            return this.name || (this.ladderFunc);
+        },
+
+        labelStyle: function () {
+            return this.name ? 'node_label_italic' : '';
+        },
+
+        oneditprepare: function () {
+            $('#node-input-srcA').typedInput({
+                typeField: '#node-input-srcAType',
+                types: ['msg', 'flow', 'global', 'num', 'bool', 'str']
+            });
+            $('#node-input-srcB').typedInput({
+                typeField: '#node-input-srcBType',
+                types: ['msg', 'flow', 'global', 'num', 'bool', 'str']
+            });
+            $('#node-input-dest').typedInput({
+                typeField: '#node-input-destType',
+                types: ['msg', 'flow', 'global']
+            });
+
+            function updateFields() {
+                var fn   = $('#node-input-ladderFunc').val();
+                var meta = LADDER_META[fn] || {};
+                $('#row-srcA').toggle(!!meta.srcA);
+                $('#row-srcB').toggle(!!meta.srcB);
+                $('#row-dest').toggle(!!meta.dest);
+                $('#ladder-category').text(meta.category ? '[' + meta.category + ']' : '');
+            }
+
+            $('#node-input-ladderFunc').on('change', updateFields);
+            updateFields();
+        }
+    });
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Edit Dialog
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="text/html" data-template-name="instructions-ladder-IEC-61131-3">
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
+    </div>
+
+    <hr/>
+
+    <div class="form-row">
+        <label for="node-input-ladderFunc"><i class="fa fa-microchip"></i> Instruction</label>
+        <select id="node-input-ladderFunc" style="width:70%;">
+            <optgroup label="── Contacts ──">
+                <option value="NO">-||- Normally Open Contact </option>
+                <option value="NC">-|/|- Normally Closed Contact</option>
+            </optgroup>
+            <optgroup label="── Comparators ──">
+                <option value="EQ">EQ – EQal            (A == B)</option>
+                <option value="NEQ">NEQ – Not EQal        (A != B)</option>
+                <option value="GT">GT – Greater Than     (A &gt; B)</option>
+                <option value="GE">GE – Greater or EQal (A &gt;= B)</option>
+                <option value="LT">LT – LTs Than        (A &lt; B)</option>
+                <option value="LE">LE – LTs or EQal    (A &lt;= B)</option>
+            </optgroup>
+            <optgroup label="── Math ──">
+                <option value="ADD">ADD – Add              (A + B → dest)</option>
+                <option value="SUB">SUB – Subtract         (A - B → dest)</option>
+                <option value="MUL">MUL – Multiply         (A * B → dest)</option>
+                <option value="DIV">DIV – Divide           (A / B → dest)</option>
+                <option value="MOD">MOD – Modulo           (A % B → dest)</option>
+                <option value="MOV">MOV – Move             (A → dest)</option>
+                <option value="ABS">ABS – Absolute Value   (|A| → dest)</option>
+                <option value="SQR">SQR – Square Root      (√A → dest)</option>
+            </optgroup>
+            <optgroup label="── Output Coils ──">
+                <option value="SET">-(S)- Set/Latch</option>
+                <option value="RESET">-(R)- Reset/Unlatch</option>
+            </optgroup>
+        </select>
+        <span id="ladder-category" style="margin-left:8px; color:#999; font-size:0.85em;"></span>
+    </div>
+
+    <hr/>
+
+    <div class="form-row" id="row-srcA">
+        <label for="node-input-srcA"><i class="fa fa-arrow-right"></i> Source A</label>
+        <input type="hidden" id="node-input-srcAType">
+        <input type="text"   id="node-input-srcA" style="width:60%;">
+    </div>
+
+    <div class="form-row" id="row-srcB">
+        <label for="node-input-srcB"><i class="fa fa-arrow-right"></i> Source B</label>
+        <input type="hidden" id="node-input-srcBType">
+        <input type="text"   id="node-input-srcB" style="width:60%;">
+    </div>
+
+    <div class="form-row" id="row-dest">
+        <label for="node-input-dest"><i class="fa fa-arrow-left"></i> Destination</label>
+        <input type="hidden" id="node-input-destType">
+        <input type="text"   id="node-input-dest" style="width:60%;">
+    </div>
+
+    <hr/>
+
+    <div class="form-row" style="color:#888; font-size:0.85em;">
+        <i class="fa fa-info-circle"></i>
+        Result is sent in <code>msg.payload</code> (true/false) and <code>msg.ladder</code>.<br>
+        <i class="fa fa-exclamation-triangle" style="color:#e67e22;"></i>
+        Contacts &amp; comparators only forward the message when the condition is <strong>TRUE</strong>.
+    </div>
+
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Help Panel
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="text/html" data-help-name="instructions-ladder-IEC-61131-3">
+    <p>
+        Simulates <strong>Ladder Logic</strong> instructions from
+        <em>Studio 5000 Logix Designer</em> (Rockwell Automation) inside Node-RED.
+    </p>
+
+    <h3>Contacts</h3>
+    <dl>
+        <dt>NO – Examine If Closed</dt><dd>TRUE when Source A is non-zero/truthy. Message forwarded only when TRUE.</dd>
+        <dt>NC – Examine If Open</dt><dd>TRUE when Source A is zero/falsy. Message forwarded only when TRUE.</dd>
+    </dl>
+
+    <h3>Comparators</h3>
+    <dl>
+        <dt>EQ / NEQ</dt><dd>EQal / Not EQal. Message forwarded only when TRUE.</dd>
+        <dt>GT / GE</dt><dd>Greater Than / Greater or EQal.</dd>
+        <dt>LT / LE</dt><dd>LTs Than / LTs or EQal.</dd>
+    </dl>
+
+    <h3>Math</h3>
+    <dl>
+        <dt>ADD / SUB / MUL / DIV / MOD</dt><dd>Arithmetic, result written to Destination. Always forwards message.</dd>
+        <dt>MOV</dt><dd>Copies Source A to Destination.</dd>
+        <dt>ABS</dt><dd>Absolute value of Source A → Destination.</dd>
+        <dt>SQR</dt><dd>Square root of Source A → Destination.</dd>
+    </dl>
+
+    <h3>Output Coils</h3>
+    <dl>
+        <dt>SET</dt><dd>Writes <code>true</code> to Destination.</dd>
+        <dt>RESET</dt><dd>Writes <code>false</code> to Destination.</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ul>
+        <li><code>msg.payload</code> – boolean result.</li>
+        <li><code>msg.ladder.func</code> – instruction name.</li>
+        <li><code>msg.ladder.result</code> – same as payload.</li>
+        <li><code>msg.ladder.status</code> – status string shown on node.</li>
+    </ul>
+
+    <h3>Node Status</h3>
+    <p>
+        Status is displayed in two logical parts separated by  <strong>‖</strong>:<br>
+        <em>Left</em>: instruction + variable names.<br>
+        <em>Right</em>: resolved values + result.<br><br>
+        🟢 Green dot = TRUE &nbsp;|&nbsp; ⚫ Grey ring = FALSE &nbsp;|&nbsp; 🔴 Red = Error
+    </p>
+</script>
