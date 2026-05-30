@@ -1,4 +1,4 @@
-# @vitormnm/node-red-instructions-ladder-IEC-61131-3
+# @vitormnm/node-red-instructions-ladder-iec-61131-3
 
 A Node-RED node that provides common **IEC 61131-3 Ladder Logic instructions** for building PLC-style logic flows directly inside Node-RED.
 
@@ -166,7 +166,7 @@ It allows Node-RED users to create ladder-style logic using familiar industrial 
 ## Installation
 
 ```bash
-npm install node-red-contrib-iec61131-ladder
+npm install @vitormnm/node-red-instructions-ladder-iec-61131-3
 ```
 
 Restart Node-RED after installation.
