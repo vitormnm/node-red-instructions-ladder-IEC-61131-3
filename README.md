@@ -1,4 +1,3 @@
-# @vitormnm/node-red-instructions-ladder-iec-61131-3
 
 A Node-RED node that provides common **IEC 61131-3 Ladder Logic instructions** for building PLC-style logic flows directly inside Node-RED.
 
