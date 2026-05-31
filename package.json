@@ -13,9 +13,9 @@
     "codesys"
   ],
   "node-red": {
-    "nodes": {
       "version": ">=2.0.0",
-      "instructions-ladder-IEC-61131-3": "instructions_ladder_IEC_61131_3.js"
+    "nodes": {
+      "instructions-ladder-iec-61131-3": "instructions_ladder_IEC_61131_3.js"
     }
   },
   "author": {

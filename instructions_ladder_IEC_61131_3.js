@@ -201,7 +201,7 @@ module.exports = function (RED) {
         const ladderFunc = config.ladderFunc;
         const dest = config.dest;
         const destType = config.destType;
-        
+
         switch (destType) {
             case 'msg':
                 if (resultOperation) {
@@ -251,5 +251,5 @@ module.exports = function (RED) {
         node.on('close', function () { node.status({}); });
     }
 
-    RED.nodes.registerType('instructions-ladder-IEC-61131-3', instructions_ladder_IEC_61131_3);
+    RED.nodes.registerType('instructions-ladder-iec-61131-3', instructions_ladder_IEC_61131_3);
 };
