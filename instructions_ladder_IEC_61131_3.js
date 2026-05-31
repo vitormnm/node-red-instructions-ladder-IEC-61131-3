@@ -130,13 +130,13 @@ module.exports = function (RED) {
             // ── Math (two operands) ───────────────────────────────────────────
             case 'ADD':
                 computed = Number(valA) + Number(valB);
-                result = true;
+                result = computed;
                 resultOperation = true
                 break;
             case 'SUB':
                 computed = Number(valA) - Number(valB);
 
-                result = true;
+                result = computed;
                 resultOperation = true
                 break;
             case 'MUL':
@@ -148,25 +148,33 @@ module.exports = function (RED) {
                 if (Number(valB) === 0) { node.warn('MOD: Division by zero!'); result = false; break; }
                 computed = Number(valA) % Number(valB);
 
-                result = true;
+                result = computed;
                 resultOperation = true
                 break;
             case 'DIV':
                 if (Number(valB) === 0) { node.warn('DIV: Division by zero!'); result = false; break; }
                 computed = Number(valA) / Number(valB);
 
-                result = true;
+                result = computed;
                 resultOperation = true
                 type = "Math"
                 break;
 
             // ── Math (one operand) ────────────────────────────────────────────
             case 'MOV':
-
-                result = true;
+                result = valA;
+                resultOperation = true
                 break;
-            case 'ABS': computed = Math.abs(Number(valA));  result = true; break;
-            case 'SQR': computed = Math.sqrt(Math.abs(Number(valA))); result = true; break;
+            case 'ABS':
+                computed = Math.abs(Number(valA));
+                result = computed;
+                resultOperation = true
+                break;
+            case 'SQR':
+                computed = Math.sqrt(Math.abs(Number(valA)));
+                result = computed;
+                resultOperation = true
+                break;
 
             // ── Output Coils ──────────────────────────────────────────────────
             case 'SET':
@@ -174,8 +182,9 @@ module.exports = function (RED) {
                 result = true;
                 break;
             case 'RESET':
-                resultOperation = true
                 result = false;
+                resultOperation = true
+
                 break;
 
             default:
@@ -188,11 +197,11 @@ module.exports = function (RED) {
     }
 
     function writeNode(node, msg, config, sendMsg, result, resultOperation) {
-        console.log(config)
+
         const ladderFunc = config.ladderFunc;
         const dest = config.dest;
         const destType = config.destType;
-
+        
         switch (destType) {
             case 'msg':
                 if (resultOperation) {
