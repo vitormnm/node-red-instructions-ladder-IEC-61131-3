@@ -1,5 +1,5 @@
 module.exports = function (RED) {
-
+    const registry = require("./registry");
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     function resolveValue(node, msg, type, key) {
@@ -57,41 +57,75 @@ module.exports = function (RED) {
         const vB = fmt(valB);
         const res = result ? 'TRUE' : 'FALSE';
 
+        let fill
+        let shape
+        let text = `${fn} executed`;
+
         // ── Contacts ─────────────────────────────────────────────────────────
-        // NO motor_run(true)→TRUE
-        if (fn === 'NO' || fn === 'NC')
-            return `${fn} ${nA}(${vA})→${res}`;
+        if (fn === 'NO' || fn === 'NC') {
+            text = `${fn} ${nA}(${vA})→${res}`;
+        }
 
         // ── Comparators ──────────────────────────────────────────────────────
-        // GT temp(85)>limit(80)→TRUE
         const OPS = { EQ: '==', NEQ: '!=', GT: '>', GE: '>=', LT: '<', LE: '<=' };
-        if (OPS[fn])
-            return `${fn} ${nA}(${vA})${OPS[fn]}${nB}(${vB})→${res}`;
+        if (OPS[fn]) {
+            text = `${fn} ${nA}(${vA})${OPS[fn]}${nB}(${vB})→${res}`;
+        }
 
         // ── Math (two operands) ───────────────────────────────────────────────
-        // ADD a(10)+b(5)→result=15
-        // DIV x(9)/y(0)→÷0ERR
         const MATH2 = { ADD: '+', SUB: '-', MUL: '*', DIV: '/', MOD: '%' };
         if (MATH2[fn]) {
-            if ((fn === 'DIV' || fn === 'MOD') && Number(valB) === 0)
-                return `${fn} ${nA}(${vA})${MATH2[fn]}${nB}(0)→÷0ERR`;
-            return `${fn} ${nA}(${vA})${MATH2[fn]}${nB}(${vB})→${nD}=${fmt(computed)}`;
+            if ((fn === 'DIV' || fn === 'MOD') && Number(valB) === 0) {
+                text = `${fn} ${nA}(${vA})${MATH2[fn]}${nB}(0)→÷0ERR`;
+            } else {
+                text = `${fn} ${nA}(${vA})${MATH2[fn]}${nB}(${vB})→${nD}=${fmt(computed)}`;
+            }
         }
 
         // ── Math (one operand) ────────────────────────────────────────────────
-        // MOV src(42)→dest
-        // ABS |x(-7)|→out=7
-        // SQR √n(64)→root=8
-        if (fn === 'MOV') return `MOV ${nA}(${vA})→${nD}`;
-        if (fn === 'ABS') return `ABS |${nA}(${vA})|→${nD}=${fmt(computed)}`;
-        if (fn === 'SQR') return `SQR √${nA}(${vA})→${nD}=${fmt(computed)}`;
+        if (fn === 'MOV') {
+            text = `MOV ${nA}(${vA})→${nD}`;
+        }
+
+        if (fn === 'ABS') {
+            text = `ABS |${nA}(${vA})|→${nD}=${fmt(computed)}`;
+        }
+
+        if (fn === 'SQR') {
+            text = `SQR √${nA}(${vA})→${nD}=${fmt(computed)}`;
+        }
 
         // ── Output Coils ──────────────────────────────────────────────────────
-        // SET →motor=TRUE   |   RST →alarm=FALSE
-        if (fn === 'SET') return `SET →${nD}=TRUE`;
-        if (fn === 'RESET') return `RST →${nD}=FALSE`;
+        if (fn === 'SET') {
+            text = `SET →${nD}=TRUE`;
+        }
 
-        return `${fn} executed`;
+        if (fn === 'RESET') {
+            text = `RST →${nD}=FALSE`;
+        }
+
+        if (fn === 'CTU') {
+            text = `CTU→CV(${result.CV})=${result.Q}`;
+        }
+
+        //Build color
+        if (fn == "CTU") {
+            fill = result.Q ? 'green' : 'grey';
+            shape = result.Q ? 'dot' : 'ring';
+
+        } else {
+            fill = result ? 'green' : 'grey';
+            shape = result ? 'dot' : 'ring';
+        }
+
+
+
+
+        return {
+            text: text,
+            fill: fill,
+            shape: shape
+        }
     }
 
     // ─── Instruction Execution ────────────────────────────────────────────────
@@ -101,13 +135,20 @@ module.exports = function (RED) {
         const fn = config.ladderFunc;
         const valA = resolveValue(node, msg, config.srcAType, config.srcA);
         const valB = resolveValue(node, msg, config.srcBType, config.srcB);
+        const valC = resolveValue(node, msg, config.srcCType, config.srcC);
+
+
+
         const nameA = config.srcA || '';
         const nameB = config.srcB || '';
-        const nameDest = config.dest || '';
+        const nameC = config.srcC || '';
 
+        const nameDest = config.dest || '';
+        const nameDestB = config.destB || '';
 
         let payload = null;
         let result = false;
+        let resultB = false;
         let sendMsg = true;
         let Msg = true;
         let computed; // for math instructions that produce a new value
@@ -184,6 +225,50 @@ module.exports = function (RED) {
             case 'RESET':
                 result = false;
                 resultOperation = true
+                break;
+
+            case 'CTU':
+                // SET VALUE
+                var memory = registry.getMemory(node)
+                if (valA === true) {
+                    var memory = registry.getMemory(node)
+                    //Set memory
+                    if (memory) {
+                        memory = memory + 1
+                        registry.setMemory(node, memory)
+                    } else {
+                        memory = 1
+                        registry.setMemory(node, memory)
+                    }
+                }
+
+                if(memory === undefined){
+                    memory = 0;
+                }
+
+                //RESET
+                if (valB === true) {
+                    memory = 0
+                    registry.setMemory(node, memory)
+                }
+
+
+                //set result
+                if (memory >= valC) {
+                    result = {
+                        Q: true,
+                        CV: memory
+                    }
+
+                    resultOperation = true
+
+                } else {
+                    resultOperation = true
+                    result = {
+                        Q: false,
+                        CV: memory
+                    }
+                }
 
                 break;
 
@@ -192,11 +277,12 @@ module.exports = function (RED) {
                 result = false;
         }
 
-        const statusText = buildStatus(fn, nameA, nameB, nameDest, valA, valB, result, computed);
-        return { result, resultOperation, statusText, sendMsg };
+        const statusConfig = buildStatus(fn, nameA, nameB, nameDest, valA, valB, result, computed);
+        return { result, resultOperation, statusConfig, sendMsg };
     }
 
     function writeNode(node, msg, config, sendMsg, result, resultOperation) {
+
 
         const ladderFunc = config.ladderFunc;
         const dest = config.dest;
@@ -219,6 +305,8 @@ module.exports = function (RED) {
         }
     }
 
+    
+
     // ─── Node Definition ──────────────────────────────────────────────────────
 
     function instructions_ladder_IEC_61131_3(config) {
@@ -229,15 +317,15 @@ module.exports = function (RED) {
 
         node.on('input', function (msg) {
             try {
-                const { result, resultOperation, statusText, sendMsg } = executeLadder(node, msg, config);
+                const { result, resultOperation, statusConfig, sendMsg } = executeLadder(node, msg, config);
 
                 node.status({
-                    fill: result ? 'green' : 'grey',
-                    shape: result ? 'dot' : 'ring',
-                    text: statusText
+                    fill: statusConfig.fill,
+                    shape: statusConfig.shape,
+                    text: statusConfig.text,
                 });
 
-                msg.ladder = { func: config.ladderFunc, result, status: statusText };
+                msg.ladder = { func: config.ladderFunc, result, status: statusConfig };
                 //Write payload and msg
                 writeNode(node, msg, config, sendMsg, result, resultOperation)
 
