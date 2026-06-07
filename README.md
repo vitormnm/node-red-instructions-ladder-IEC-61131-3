@@ -34,12 +34,20 @@ A Node-RED node that provides common **IEC 61131-3 Ladder Logic instructions** f
 | SQR         | Square root    |
 | MOV         | Move value     |
 
+### counter Instructions
+
+| Instruction | Description    |
+| ----------- | -------------- |
+| CTU         | counter up       |
+
+
 ### Output Instructions
 
 | Instruction | Description                              |
 | ----------- | ---------------------------------------- |
 | SET         | Sets the destination variable to `true`  |
 | RESET       | Sets the destination variable to `false` |
+| CTU         | OBJ {"Q":true,"CV":15}                    |
 
 ---
 
