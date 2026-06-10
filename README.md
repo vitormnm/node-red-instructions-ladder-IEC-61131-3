@@ -50,6 +50,10 @@ A Node-RED node that provides common **IEC 61131-3 Ladder Logic instructions** f
 | CTU         | OBJ {"Q":true,"CV":15}                    |
 
 ---
+### Support the development of this project and others if you found it useful.
+<a href="https://buymeacoffee.com/vitormnm">
+    <img src="./resources/bmc-button.svg" alt="Logo" width="200">
+</a>
 
 ## Supported Data Sources
 
