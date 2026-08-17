@@ -50,9 +50,9 @@ module.exports = function (RED) {
     //   RST →alarm=FALSE
 
     function buildStatus(fn, nameA, nameB, nameDest, valA, valB, result, computed) {
-        const nA = nameA || '?';
-        const nB = nameB || '?';
-        const nD = nameDest || '?';
+        const nA = 'A';
+        const nB = 'B';
+        const nD = 'dest';
         const vA = fmt(valA);
         const vB = fmt(valB);
         const res = result ? 'TRUE' : 'FALSE';
@@ -63,13 +63,13 @@ module.exports = function (RED) {
 
         // ── Contacts ─────────────────────────────────────────────────────────
         if (fn === 'NO' || fn === 'NC') {
-            text = `${fn} ${nA}(${vA})→${res}`;
+            text = `${fn} ${nA}(${vA})`;
         }
 
         // ── Comparators ──────────────────────────────────────────────────────
         const OPS = { EQ: '==', NEQ: '!=', GT: '>', GE: '>=', LT: '<', LE: '<=' };
         if (OPS[fn]) {
-            text = `${fn} ${nA}(${vA})${OPS[fn]}${nB}(${vB})→${res}`;
+            text = `${fn} ${nA}(${vA})${OPS[fn]}${nB}(${vB})`;
         }
 
         // ── Math (two operands) ───────────────────────────────────────────────
@@ -97,11 +97,11 @@ module.exports = function (RED) {
 
         // ── Output Coils ──────────────────────────────────────────────────────
         if (fn === 'SET') {
-            text = `SET →${nD}=TRUE`;
+            text = `SET →${nD}`;
         }
 
         if (fn === 'RESET') {
-            text = `RST →${nD}=FALSE`;
+            text = `RST →${nD}`;
         }
 
         if (fn === 'CTU') {
@@ -288,14 +288,18 @@ module.exports = function (RED) {
         const dest = config.dest;
         const destType = config.destType;
 
-        switch (destType) {
-            case 'msg':
-                if (resultOperation) {
-                    msg[dest] = result
-                }
-                break;
-            case 'flow': node.context().flow.set(dest, result); break;
-            case 'global': node.context().global.set(dest, result); break;
+        if (resultOperation) {
+            switch (destType) {
+                case 'msg':
+                    msg[dest] = result;
+                    break;
+                case 'flow':
+                    node.context().flow.set(dest, result);
+                    break;
+                case 'global':
+                    node.context().global.set(dest, result);
+                    break;
+            }
         }
 
 
